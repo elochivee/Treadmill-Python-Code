@@ -1,0 +1,54 @@
+import random
+import heapq  # Min-heap for managing treadmill availability efficiently
+
+# Gym Setup
+NUM_TREADMILLS = 3 
+NUM_PEOPLE = 10  
+
+HIT_MIN, HIT_MAX = 10, 15  # HIT users train for 10-15 mins
+LIT_MIN, LIT_MAX = 15, 30  # LIT users train for 15-30 mins
+
+# Generate random workout times for each person
+gym_members = []
+for i in range(1, NUM_PEOPLE + 1):
+    workout_type = random.choice(["HIT", "LIT"])  
+    # Randomly choose HIT or LIT
+    workout_time = random.randint(HIT_MIN, HIT_MAX) if workout_type == "HIT" else random.randint(LIT_MIN, LIT_MAX)
+    gym_members.append({"id": i, "type": workout_type, "time": workout_time})
+
+# Managing treadmills using a priority queue (min-heap)
+treadmills = []  # Tracks treadmills
+waiting_times = []  # Stores the wait time for each gym member
+current_time = 0  # Tracks the simulation time
+
+# Assigning treadmills efficiently
+for member in gym_members:
+    # Step 1: If a treadmill is available, assign it immediately
+    if len (treadmills) < NUM_TREADMILLS:
+        treadmill_free_time = current_time + member["time"]  
+        # Set treadmill free time
+        heapq.heappush(treadmills, (treadmill_free_time, len(treadmills) + 1))  # Assign treadmill
+        waiting_times.append(0)  # No wait time
+        
+    else:
+    # Step 2: If all treadmills are occupied, wait for the next available one
+        treadmill_free_time, treadmill_id = heapq.heappop(treadmills) 
+        # Get the next available treadmill
+        wait_time = max(0, treadmill_free_time - current_time)  
+        # Calculate the waiting time
+        waiting_times.append(wait_time)  # Store the waiting time
+        # Move simulation time forward if needed
+        current_time = max(current_time, treadmill_free_time)
+
+     # Step 3: Assign the treadmill to the next person
+        heapq.heappush(treadmills, (current_time + member["time"], treadmill_id))
+
+# Step 4: Calculate the average waiting time
+avg_wait_time = sum(waiting_times) / NUM_PEOPLE
+
+# Step 5: Print results
+print("Treadmill Usage and Waiting Times:")
+for i, member in enumerate(gym_members):
+    print(f"Person {member['id']} ({member['type']}) used treadmill for {member['time']} mins, waited {waiting_times[i]} mins.")
+
+print(f"\n Average wait time: {avg_wait_time:.2f} minutes")
